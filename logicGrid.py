@@ -4,7 +4,7 @@ from helpers import Helpers
 from screenItem import ScreenSpriteItem
 
 class LogicGridItem:
-    icon:pygame.surface.Surface = pygame.surface.Surface((128, 128))
+    icon:pygame.surface.Surface = pygame.surface.Surface((100, 100))
     icon.fill(pygame.color.Color(100, 100, 100))
 
     def __init__(self, data=None, name:str="base grid class", icon:pygame.surface.Surface=None) -> None:
@@ -13,6 +13,7 @@ class LogicGridItem:
         self.pos = None
         self.inputs = []
         self.outputs = []
+        self.color = pygame.color.Color(0, 0, 0)
         if icon != None:
             self.icon = icon
 
@@ -34,7 +35,7 @@ class LogicGridItem:
         pass
 
 class testItem(LogicGridItem):
-    icon:pygame.surface.Surface = pygame.surface.Surface((128, 128))
+    icon:pygame.surface.Surface = pygame.surface.Surface((100, 100))
     icon.fill(pygame.color.Color(0, 100, 0))
     
     def __init__(self, data=None) -> None:

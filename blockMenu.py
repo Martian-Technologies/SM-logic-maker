@@ -46,7 +46,6 @@ class BlockMenu(ScreenSpriteItem):
                                 self.selectedItem = None
                             else:
                                 self.selectedItem = item
-                            print(self.selectedItem)
                             break
                         i += 1
             elif event.type == pygame.KEYDOWN:

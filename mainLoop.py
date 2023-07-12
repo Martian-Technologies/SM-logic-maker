@@ -34,7 +34,4 @@ class MainLoop:
         self.itemManager.handleEvents(events)
         self.itemManager.update()
         self.itemManager.draw()
-        for event in events:
-            if event.type == pygame.MOUSEWHEEL:
-                print(event.x, event.y)
         pygame.display.update()
