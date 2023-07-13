@@ -44,20 +44,21 @@ class LogicGrid(ScreenSpriteItem):
         super().__init__(None, pos1FromTopLeft, name)
         self.pos2:Vec = pos2FromBottomRight
         self.sizePix:Vec = None
-        self.veiwCenter:Vec = Vec(-1, 1)
-        self.zoom:int = 0.5
+        self.viewCenter:Vec = Vec(-1, 1)
+        self.zoom:float = 0.5
         self.items:list[LogicGridItem] = []
         self.itemSpacing = 128
         self.iconSize = 100
+        self.drag_reference = None
 
     def initInWin(self):
         self.sizePix:Vec = Vec(self.app.screen.get_size()[0], self.app.screen.get_size()[1]) - self.pos - self.pos2
         self.blockMenu = self.app.mainLoop.itemManager.getItemFromName('block menu')
-
+    
     def handleEvents(self, events:list[pygame.event.Event]):
         for event in events:
             if event.type == pygame.MOUSEWHEEL and self.isTouchingMouse():
-                self.setZoom(zoom = self.zoom + event.y/10)
+                self.setZoom(zoom = self.zoom * (2 ** (event.y/4)))
             elif event.type == pygame.WINDOWRESIZED:
                 self.sizePix:Vec = Vec(self.app.screen.get_size()[0], self.app.screen.get_size()[1]) - self.pos - self.pos2
             elif event.type == pygame.MOUSEBUTTONDOWN and self.isTouchingMouse():
@@ -67,8 +68,12 @@ class LogicGrid(ScreenSpriteItem):
                         self.addGridItem(self.blockMenu.selectedItem(), clickedPos)
                     else:
                         print(self.getItemAtPos(clickedPos))
-                        
-            
+                elif event.button == 3:
+                    self.drag_reference = (Helpers.getMousePos() - self.pos - self.sizePix/2)/self.zoom/self.itemSpacing + self.viewCenter
+            elif event.type == pygame.MOUSEBUTTONUP:
+                self.drag_reference = None
+            elif event.type == pygame.MOUSEMOTION and self.drag_reference != None:
+                self.viewCenter = self.drag_reference - (Helpers.getMousePos() - self.pos - self.sizePix/2)/self.zoom/self.itemSpacing
     def update(self):
         movementVec = Vec()
         pressed = pygame.key.get_pressed()
@@ -82,7 +87,7 @@ class LogicGrid(ScreenSpriteItem):
             movementVec.x += 1/self.zoom
         if pygame.key.get_mods() & pygame.KMOD_SHIFT:
             movementVec *= 2
-        self.setVeiwCenter(self.veiwCenter + movementVec * self.app.deltaTimeMS / 500)
+        self.setVeiwCenter(self.viewCenter + movementVec * self.app.deltaTimeMS / 500)
 
     def draw(self):
         self.updateSprite()
@@ -104,7 +109,7 @@ class LogicGrid(ScreenSpriteItem):
         posScale = self.zoom * self.itemSpacing
         lineCount = self.sizePix / posScale
         lineCount = Vec(int(lineCount.x), int(lineCount.y)) + Vec(2, 2)
-        lineStart = -Vec(self.veiwCenter.x % 1, self.veiwCenter.y % 1) * posScale + (self.sizePix / 2) \
+        lineStart = -Vec(self.viewCenter.x % 1, self.viewCenter.y % 1) * posScale + (self.sizePix / 2) \
             - (Vec(int(lineCount.x / 2), int(lineCount.y / 2)) * posScale)
         for x in range(int(lineCount.x)):
             pygame.draw.line(sprite, pygame.color.Color(0, 0, 0), (x * posScale + lineStart.x, 0), (x * posScale + lineStart.x, self.sizePix.y))
@@ -131,18 +136,20 @@ class LogicGrid(ScreenSpriteItem):
             pass
 
     def setVeiwCenter(self, veiwCenter:Vec):
-        self.veiwCenter = veiwCenter
+        self.viewCenter = veiwCenter
     
     def setZoom(self, zoom:float):
         if zoom < 0.05:
             zoom = 0.05
         if zoom > 1:
             zoom = 1
+        self.viewCenter += (Helpers.getMousePos() - self.pos - self.sizePix/2)/self.zoom/self.itemSpacing
         self.zoom = zoom
+        self.viewCenter -= (Helpers.getMousePos() - self.pos - self.sizePix/2)/self.zoom/self.itemSpacing
 
     def setVeiwArea(self, veiwCenter:Vec=None, zoom:float=None):
         if veiwCenter != None:
-            self.veiwCenter = veiwCenter
+            self.viewCenter = veiwCenter
         if zoom != None:
             self.zoom = zoom
             
@@ -153,10 +160,10 @@ class LogicGrid(ScreenSpriteItem):
         return self.surfPosToScreenPos(self.gridPosToSurfPos(pos))
 
     def surfPosToGridPos(self, pos:Vec):
-        return (pos - (self.sizePix / 2)) / (self.zoom * self.itemSpacing) + self.veiwCenter
+        return (pos - (self.sizePix / 2)) / (self.zoom * self.itemSpacing) + self.viewCenter
 
     def gridPosToSurfPos(self, pos:Vec):
-        return (pos - self.veiwCenter) * (self.zoom * self.itemSpacing) + (self.sizePix / 2)
+        return (pos - self.viewCenter) * (self.zoom * self.itemSpacing) + (self.sizePix / 2)
 
     def getAreaData(self, corner:Vec=None, size:Vec=None):
         pass
