@@ -100,7 +100,6 @@ class LogicGrid(ScreenSpriteItem):
                             areaSize += Vec(1, 1)
                             for x in range(int(areaSize.x)):
                                 for y in range(int(areaSize.y)):
-                                    print(Vec(x, y) + corner)
                                     self.removeGridItem(pos=Vec(x, y) + corner)
                         else:
                             self.removeGridItem(pos=self.selectedPos)
