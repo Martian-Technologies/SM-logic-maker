@@ -3,7 +3,9 @@ import importlib
 import pygame
 
 class PluginManager:
-    def __init__(self, block_menu):
+    def __init__(self, app):
+        block_menu = app.mainLoop.block_menu
+        self.app = app
         LogicGridItem_base = importlib.import_module("logicGrid").LogicGridItem
         for plugin in os.listdir(os.path.join(os.path.dirname(__file__), "plugins")):
             if not plugin.endswith(".py"):
@@ -36,6 +38,10 @@ class PluginManager:
                     for item in pluginClass.additions[additionType]:
                         print(item)
                         self.addLogicGridItem(item, LogicGridItem_base, block_menu)
+                elif additionType == 'startup':
+                    for func in pluginClass.additions[additionType]:
+                        print(func)
+                        func(self.app)
                 else:
                     print("Unknown addition type: " + additionType)
 
