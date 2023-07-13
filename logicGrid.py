@@ -151,18 +151,24 @@ class LogicGrid(ScreenSpriteItem):
                     size.y = -size.y
                     corner.y -= size.y
                 size += Vec(1, 1)
-                selectIcon = pygame.Surface(Helpers.vecToTulpe(self.itemSpacing*size))
-                selectIcon.fill(pygame.Color(50, 50, 50, 100))
+                rectSize = self.itemSpacing*size*self.zoom
+                pos = Helpers.round(Helpers.vecToTulpe(self.gridPosToSurfPos(corner)))
                 pygame.draw.rect(
-                    selectIcon,
-                    pygame.color.Color(150, 150, 150, 50),
-                    pygame.Rect(self.selectIconEdgeThickness / self.zoom,
-                                self.selectIconEdgeThickness / self.zoom,
-                                (self.itemSpacing*size.x) - self.selectIconEdgeThickness*2/self.zoom,
-                                (self.itemSpacing*size.y) - self.selectIconEdgeThickness*2/self.zoom)
+                    sprite,
+                    pygame.Color(50, 50, 50, 100),
+                    pygame.Rect(pos[0],
+                                pos[1],
+                                rectSize.x,
+                                rectSize.y)
                                 )
-                sprite.blit(pygame.transform.scale_by(selectIcon, self.zoom),
-                        Helpers.round(Helpers.vecToTulpe(self.gridPosToSurfPos(corner))))
+                pygame.draw.rect(
+                    sprite,
+                    pygame.color.Color(150, 150, 150, 50),
+                    pygame.Rect(self.selectIconEdgeThickness + pos[0],
+                                self.selectIconEdgeThickness + pos[1],
+                                (self.itemSpacing*size.x*self.zoom) - self.selectIconEdgeThickness*2,
+                                (self.itemSpacing*size.y*self.zoom) - self.selectIconEdgeThickness*2)
+                                )
         for item in self.items:
             icon:pygame.surface.Surface = item.getIcon()
             icon = pygame.transform.scale_by(icon, self.zoom * self.iconSize/max(icon.get_size()[0], icon.get_size()[1]))
@@ -174,7 +180,7 @@ class LogicGrid(ScreenSpriteItem):
     def makeGrid(self, sprite):
         posScale = self.zoom * self.itemSpacing
         lineCount = self.sizePix / posScale
-        lineCount = Vec(int(lineCount.x), int(lineCount.y)) + Vec(2, 2)
+        lineCount = Vec(int(lineCount.x), int(lineCount.y)) + Vec(3, 3)
         lineStart = -Vec(self.viewCenter.x % 1, self.viewCenter.y % 1) * posScale + (self.sizePix / 2) \
             - (Vec(int(lineCount.x / 2), int(lineCount.y / 2)) * posScale)
         for x in range(int(lineCount.x)):
