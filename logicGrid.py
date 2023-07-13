@@ -30,7 +30,7 @@ class LogicGridItem:
         pass
 
 class testItem(LogicGridItem):
-    icon:pygame.surface.Surface = pygame.image.load(pathlib.Path("/Users/ben/Documents/GitHub/SM logic maker/mtechloadingscreen.png"))
+    icon:pygame.surface.Surface = pygame.image.load(pathlib.Path(__file__).parent.absolute() / 'assets' / 'mtechloadingscreen.png')
     #icon.fill(pygame.color.Color(0, 100, 0))
     
     def __init__(self, data=None) -> None:
