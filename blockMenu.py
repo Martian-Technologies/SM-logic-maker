@@ -21,12 +21,14 @@ class BlockMenu(ScreenSpriteItem):
     def handleEvents(self, events:list[pygame.event.Event]):
         for event in events:
             if event.type == pygame.MOUSEWHEEL and self.isTouchingMouse():
-                if event.y > 0 or (len(self.items) - self.scrollPos - 1)*(self.iconSize + 20) + 100 > self.size.y:
+                if event.y > 0 or (len(self.items) - 1 - self.scrollPos)*(self.iconSize + 20) + self.iconSize + 50 > self.size.y:
                     self.scrollPos = self.scrollPos - event.y/10
                 if self.scrollPos < 0 or len(self.items) == 0:
                     self.scrollPos = 0
-                if (len(self.items) - self.scrollPos - 1)*(self.iconSize + 20) + 100 < self.size.y:
-                    self.scrollPos = -((self.size.y - 100) / (self.iconSize + 20) - len(self.items) + 1)
+                if (len(self.items) - 1 - self.scrollPos)*(self.iconSize + 20) + self.iconSize + 50 < self.size.y:
+                    fixPos = -((self.size.y - self.iconSize - 50) / (self.iconSize + 20) - len(self.items) + 1)
+                    if fixPos > 0:
+                        self.scrollPos = fixPos
             elif event.type == pygame.WINDOWRESIZED:
                 self.setupSprites()
             elif event.type == pygame.MOUSEBUTTONDOWN:

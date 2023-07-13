@@ -36,6 +36,11 @@ class Helpers:
         if Helpers.isIterable(x):
             return tuple([math.floor(n) for n in x])
         return math.floor(x)
+    
+    def abs(x:float | int | tuple | list) -> tuple[int] | int:
+        if Helpers.isIterable(x):
+            return tuple([abs(n) for n in x])
+        return math.floor(x)
 
     def isIterable(obj):
         try:

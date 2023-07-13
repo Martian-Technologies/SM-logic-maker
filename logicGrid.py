@@ -49,6 +49,8 @@ class LogicGrid(ScreenSpriteItem):
         self.items:list[LogicGridItem] = []
         self.itemSpacing = 128
         self.iconSize = 100
+        self.selectedPos = None
+        self.selectIconEdgeThickness = 5
 
     def initInWin(self):
         self.sizePix:Vec = Vec(self.app.screen.get_size()[0], self.app.screen.get_size()[1]) - self.pos - self.pos2
@@ -66,9 +68,37 @@ class LogicGrid(ScreenSpriteItem):
                     if self.blockMenu.selectedItem != None:
                         self.addGridItem(self.blockMenu.selectedItem(), clickedPos)
                     else:
-                        print(self.getItemAtPos(clickedPos))
+                        if self.selectedPos == clickedPos:
+                            self.selectedPos = None
+                        else:
+                            if pygame.key.get_mods() & pygame.KMOD_SHIFT and self.selectedPos != None:
+                                if type(self.selectedPos) == tuple:
+                                    self.selectedPos = (self.selectedPos[0], clickedPos)
+                                else:
+                                    self.selectedPos = (self.selectedPos, clickedPos)
+                            else:
+                                self.selectedPos = clickedPos
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE:
+                    if self.selectedPos != None:
+                        if type(self.selectedPos) == tuple:
+                            areaSize = self.selectedPos[1] - self.selectedPos[0]
+                            corner = self.selectedPos[0].copy()
+                            if areaSize.x < 0:
+                                areaSize.x = -areaSize.x
+                                corner.x -= areaSize.x
+                            if areaSize.y < 0:
+                                areaSize.y = -areaSize.y
+                                corner.y -= areaSize.y
+                            areaSize += Vec(1, 1)
+                            for x in range(int(areaSize.x)):
+                                for y in range(int(areaSize.y)):
+                                    print(Vec(x, y) + corner)
+                                    self.removeGridItem(pos=Vec(x, y) + corner)
+                        else:
+                            self.removeGridItem(pos=self.selectedPos)
+        
                         
-            
     def update(self):
         movementVec = Vec()
         pressed = pygame.key.get_pressed()
@@ -91,7 +121,42 @@ class LogicGrid(ScreenSpriteItem):
     def updateSprite(self):
         sprite = pygame.surface.Surface((self.sizePix.x, self.sizePix.y))
         sprite.fill(pygame.color.Color(200, 200, 200))
-        itemPosScale = self.zoom * self.itemSpacing
+        if self.selectedPos != None:
+            if type(self.selectedPos) == Vec:
+                selectIcon = pygame.Surface((self.itemSpacing, self.itemSpacing))
+                selectIcon.fill(pygame.Color(50, 50, 50, 100))
+                pygame.draw.rect(
+                    selectIcon,
+                    pygame.color.Color(150, 150, 150, 50),
+                    pygame.Rect(self.selectIconEdgeThickness / self.zoom,
+                                self.selectIconEdgeThickness / self.zoom,
+                                self.itemSpacing - self.selectIconEdgeThickness*2/self.zoom,
+                                self.itemSpacing - self.selectIconEdgeThickness*2/self.zoom)
+                                )
+                sprite.blit(pygame.transform.scale_by(selectIcon, self.zoom),
+                        Helpers.round(Helpers.vecToTulpe(self.gridPosToSurfPos(self.selectedPos))))
+            elif type(self.selectedPos) == tuple:
+                size:Vec = self.selectedPos[1] - self.selectedPos[0]
+                corner:Vec = self.selectedPos[0].copy()
+                if size.x < 0:
+                    size.x = -size.x
+                    corner.x -= size.x
+                if size.y < 0:
+                    size.y = -size.y
+                    corner.y -= size.y
+                size += Vec(1, 1)
+                selectIcon = pygame.Surface(Helpers.vecToTulpe(self.itemSpacing*size))
+                selectIcon.fill(pygame.Color(50, 50, 50, 100))
+                pygame.draw.rect(
+                    selectIcon,
+                    pygame.color.Color(150, 150, 150, 50),
+                    pygame.Rect(self.selectIconEdgeThickness / self.zoom,
+                                self.selectIconEdgeThickness / self.zoom,
+                                (self.itemSpacing*size.x) - self.selectIconEdgeThickness*2/self.zoom,
+                                (self.itemSpacing*size.y) - self.selectIconEdgeThickness*2/self.zoom)
+                                )
+                sprite.blit(pygame.transform.scale_by(selectIcon, self.zoom),
+                        Helpers.round(Helpers.vecToTulpe(self.gridPosToSurfPos(corner))))
         for item in self.items:
             icon:pygame.surface.Surface = item.getIcon()
             icon = pygame.transform.scale_by(icon, self.zoom * self.iconSize/max(icon.get_size()[0], icon.get_size()[1]))
