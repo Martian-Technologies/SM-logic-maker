@@ -1,3 +1,4 @@
+import pathlib
 from pygame import Vector2 as Vec
 import pygame
 from helpers import Helpers
@@ -11,17 +12,11 @@ class LogicGridItem:
         self.name = name
         self.ID = None
         self.pos = None
-        self.inputs = []
-        self.outputs = []
-        self.color = pygame.color.Color(0, 0, 0)
         if icon != None:
             self.icon = icon
 
-    def getIcon(self):
+    def getIcon(self) -> pygame.Surface:
         return self.icon
-
-    def processInput(self, input):
-        pass
 
     def toData(self):
         pass
@@ -35,8 +30,8 @@ class LogicGridItem:
         pass
 
 class testItem(LogicGridItem):
-    icon:pygame.surface.Surface = pygame.surface.Surface((100, 100))
-    icon.fill(pygame.color.Color(0, 100, 0))
+    icon:pygame.surface.Surface = pygame.image.load(pathlib.Path("/Users/ben/Documents/GitHub/SM logic maker/mtechloadingscreen.png"))
+    #icon.fill(pygame.color.Color(0, 100, 0))
     
     def __init__(self, data=None) -> None:
         super().__init__(data, "testItem", None)
@@ -53,6 +48,7 @@ class LogicGrid(ScreenSpriteItem):
         self.zoom:int = 0.5
         self.items:list[LogicGridItem] = []
         self.itemSpacing = 128
+        self.iconSize = 100
 
     def initInWin(self):
         self.sizePix:Vec = Vec(self.app.screen.get_size()[0], self.app.screen.get_size()[1]) - self.pos - self.pos2
@@ -97,9 +93,10 @@ class LogicGrid(ScreenSpriteItem):
         sprite.fill(pygame.color.Color(200, 200, 200))
         itemPosScale = self.zoom * self.itemSpacing
         for item in self.items:
-            icon = pygame.transform.scale_by(item.getIcon(), (self.zoom, self.zoom))
-            iconPos = self.gridPosToSurfPos(item.pos)
-            sprite.blit(icon, (round(iconPos.x), round(iconPos.y)))
+            icon:pygame.surface.Surface = item.getIcon()
+            icon = pygame.transform.scale_by(icon, self.zoom * self.iconSize/max(icon.get_size()[0], icon.get_size()[1]))
+            iconPos = self.gridPosToSurfPos(item.pos) + Vec(self.itemSpacing*self.zoom - icon.get_size()[0], self.itemSpacing*self.zoom - icon.get_size()[1])/2
+            sprite.blit(icon, Helpers.round(Helpers.vecToTulpe(iconPos)))
         self.makeGrid(sprite)
         self.sprite = sprite
     

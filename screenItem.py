@@ -35,13 +35,7 @@ class ScreenSpriteItem(ScreenItem):
         return pos + self.pos
 
     def intersectsPos(self, pos:Vec):
-        pos = self.screenPosToSurfPos(pos)
-        if pos.x < 0 or pos.y < 0 or pos.x >= self.sprite.get_size()[0] or pos.y >= self.sprite.get_size()[1]:
-            return False
-        color:pygame.color.Color = self.sprite.get_at((int(pos.x), int(pos.y)))
-        if color.r == 0 and color.g == 0 and color.b == 0 and color.a == 0:
-            return False
-        return True
+        return Helpers.relitivePosIntersectsSurf(self.screenPosToSurfPos(pos), self.sprite)
     
     def isTouchingMouse(self):
         return self.intersectsPos(Helpers.getMousePos())

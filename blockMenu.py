@@ -13,6 +13,7 @@ class BlockMenu(ScreenSpriteItem):
         self.scrollPos = 0
         self.items:list[type[LogicGridItem]] = [LogicGridItem, testItem, LogicGridItem]
         self.selectedItem = None
+        self.iconSize = 80
 
     def initInWin(self):
         self.setupSprites()
@@ -20,12 +21,12 @@ class BlockMenu(ScreenSpriteItem):
     def handleEvents(self, events:list[pygame.event.Event]):
         for event in events:
             if event.type == pygame.MOUSEWHEEL and self.isTouchingMouse():
-                if event.y > 0 or (len(self.items) - self.scrollPos - 1)*(self.items[0].getMenuIcon().get_size()[1] + 20) + 100 > self.size.y:
+                if event.y > 0 or (len(self.items) - self.scrollPos - 1)*(self.iconSize + 20) + 100 > self.size.y:
                     self.scrollPos = self.scrollPos - event.y/10
                 if self.scrollPos < 0 or len(self.items) == 0:
                     self.scrollPos = 0
-                if (len(self.items) - self.scrollPos - 1)*(self.items[0].getMenuIcon().get_size()[1] + 20) + 100 < self.size.y:
-                    self.scrollPos = -((self.size.y - 100) / (self.items[0].getMenuIcon().get_size()[1] + 20) - len(self.items) + 1)
+                if (len(self.items) - self.scrollPos - 1)*(self.iconSize + 20) + 100 < self.size.y:
+                    self.scrollPos = -((self.size.y - 100) / (self.iconSize + 20) - len(self.items) + 1)
             elif event.type == pygame.WINDOWRESIZED:
                 self.setupSprites()
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -35,11 +36,12 @@ class BlockMenu(ScreenSpriteItem):
                         if len(self.items) <= i:
                             break
                         item = self.items[i]
-                        icon = pygame.transform.scale_by(item.getMenuIcon(), self.itemScale)
-                        if (i - self.scrollPos)*(icon.get_size()[1] + 20) + 20 > self.size.y:
+                        icon = item.getMenuIcon()
+                        icon = pygame.transform.scale_by(icon, self.iconSize/max(icon.get_size()[0], icon.get_size()[1]))
+                        if (i - self.scrollPos)*(self.iconSize + 20) + 20 > self.size.y:
                             break
-                        if self.isSurfAtPosTouchingPos(
-                                Vec((self.size.x - icon.get_size()[0])/2, (i - self.scrollPos)*(icon.get_size()[1] + 20) + 20),
+                        if Helpers.isSurfAtPosTouchingPos(
+                                self.getSurfPosOfItemAtIndex(i),
                                 icon, self.screenPosToSurfPos(Helpers.getMousePos())
                             ):
                             if self.selectedItem == item:
@@ -51,23 +53,23 @@ class BlockMenu(ScreenSpriteItem):
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.selectedItem = None
-
-    def isSurfAtPosTouchingPos(self, surfPos:Vec, surf:pygame.surface.Surface, pos:Vec):
-        pos -= surfPos
-        if pos.x < 0 or pos.y < 0 or pos.x >= surf.get_size()[0] or pos.y >= surf.get_size()[1]:
-            return False
-        color:pygame.color.Color = surf.get_at((int(pos.x), int(pos.y)))
-        if color.r == 0 and color.g == 0 and color.b == 0 and color.a == 0:
-            return False
-        return True
     
     def setupSprites(self):
         self.size:Vec =  Vec(0, self.app.screen.get_size()[1]) + self.pos2 - self.pos
         self.sprite:pygame.surface.Surface = pygame.surface.Surface((self.size.x, self.size.y))
         self.baseSprite:pygame.surface.Surface = pygame.surface.Surface((self.size.x, self.size.y))
         self.baseSprite.fill(pygame.color.Color(150, 150, 150))
-        self.itemScale:float = (self.size.x - 20) / 128
     
+    def getSurfPosOfItemAtIndex(self, index:int):
+        if len(self.items) <= index or len(self.items) < -index:
+            return None
+        iconSize = Helpers.tulpeToVec(self.items[index].getMenuIcon().get_size())
+        iconSize = iconSize * self.iconSize/max(iconSize.x, iconSize.y)
+        return Vec(
+            (self.size.x - iconSize.x)/2,
+            (index - self.scrollPos)*(self.iconSize + 20) + 20 + (self.iconSize - iconSize.y)/2
+            )
+
     def draw(self):
         self.sprite.blit(self.baseSprite, (0, 0))
         i = int(self.scrollPos)
@@ -77,10 +79,11 @@ class BlockMenu(ScreenSpriteItem):
             if len(self.items) <= i:
                 break
             item = self.items[i]
-            icon = pygame.transform.scale_by(item.getMenuIcon(), self.itemScale)
+            icon = item.getMenuIcon()
+            icon = pygame.transform.scale_by(icon, self.iconSize/max(icon.get_size()[0], icon.get_size()[1]))
             if (i - self.scrollPos)*(icon.get_size()[1] + 20) + 20 > self.size.y:
                 break
-            pos = ((self.size.x - icon.get_size()[0])/2, (i - self.scrollPos)*(icon.get_size()[1] + 20) + 20)
+            pos = Helpers.vecToTulpe(self.getSurfPosOfItemAtIndex(i))
             if item == self.selectedItem:
                 glow:pygame.surface.Surface = pygame.transform.scale_by(icon, 1.2)
                 glow.fill(pygame.color.Color(81, 255, 13))
