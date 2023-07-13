@@ -203,9 +203,9 @@ class LogicGrid(ScreenSpriteItem):
         lineCount = Vec(int(lineCount.x), int(lineCount.y)) + Vec(3, 3)
         scaling = 1
         while posScale < 16:
-            posScale *= 2
-            lineCount /= 2
-            scaling *= 2
+            posScale *= 3
+            lineCount /= 3
+            scaling *= 3
         lineStart = -Vec(self.viewCenter.x/scaling % 1, self.viewCenter.y/scaling % 1) * posScale + (self.sizePix / 2) \
             - (Vec(int(lineCount.x / 2), int(lineCount.y / 2)) * posScale)
         for x in range(int(lineCount.x)):
