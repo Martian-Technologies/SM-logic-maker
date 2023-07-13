@@ -219,7 +219,7 @@ class LogicGrid(ScreenSpriteItem):
         self.zoom = zoom
         self.viewCenter -= (Helpers.getMousePos() - self.pos - self.sizePix/2)/self.zoom/self.itemSpacing
 
-    def setVeiwArea(self, veiwCenter:Vec=None, zoom:float=None):
+    def setViewArea(self, veiwCenter:Vec=None, zoom:float=None):
         if veiwCenter != None:
             self.viewCenter = veiwCenter
         if zoom != None:
