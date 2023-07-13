@@ -3,6 +3,7 @@ from pygame import Vector2 as Vec
 import pygame
 from helpers import Helpers
 from screenItem import ScreenSpriteItem
+from keybindManager import keybinds
 
 class LogicGridItem:
     icon:pygame.surface.Surface = pygame.surface.Surface((100, 100))
@@ -103,8 +104,27 @@ class LogicGrid(ScreenSpriteItem):
                                     self.removeGridItem(pos=Vec(x, y) + corner)
                         else:
                             self.removeGridItem(pos=self.selectedPos)
-        
-                        
+                elif event.key == keybinds.get('centerCamera'):
+                    if self.selectedPos != None and type(self.selectedPos) == tuple:
+                        min_x = min(self.selectedPos[0].x, self.selectedPos[1].x)
+                        max_x = max(self.selectedPos[0].x, self.selectedPos[1].x)
+                        min_y = min(self.selectedPos[0].y, self.selectedPos[1].y)
+                        max_y = max(self.selectedPos[0].y, self.selectedPos[1].y)
+                    elif len(self.items) == 0:
+                        min_x = -5
+                        max_x = 5
+                        min_y = -5
+                        max_y = 5
+                    else:
+                        min_x = min([item.pos.x for item in self.items])
+                        max_x = max([item.pos.x for item in self.items])
+                        min_y = min([item.pos.y for item in self.items])
+                        max_y = max([item.pos.y for item in self.items])
+                    vzoom = self.sizePix.x / (max_x - min_x + 5) / self.itemSpacing
+                    hzoom = self.sizePix.y / (max_y - min_y + 5) / self.itemSpacing
+                    self.setZoom(min(vzoom, hzoom))
+                    self.setVeiwCenter(Vec((min_x + max_x)/2+0.5, (min_y + max_y)/2+0.5))
+                    
     def update(self):
         movementVec = Vec()
         pressed = pygame.key.get_pressed()
@@ -181,12 +201,17 @@ class LogicGrid(ScreenSpriteItem):
         posScale = self.zoom * self.itemSpacing
         lineCount = self.sizePix / posScale
         lineCount = Vec(int(lineCount.x), int(lineCount.y)) + Vec(3, 3)
-        lineStart = -Vec(self.viewCenter.x % 1, self.viewCenter.y % 1) * posScale + (self.sizePix / 2) \
+        scaling = 1
+        while posScale < 16:
+            posScale *= 2
+            lineCount /= 2
+            scaling *= 2
+        lineStart = -Vec(self.viewCenter.x/scaling % 1, self.viewCenter.y/scaling % 1) * posScale + (self.sizePix / 2) \
             - (Vec(int(lineCount.x / 2), int(lineCount.y / 2)) * posScale)
         for x in range(int(lineCount.x)):
-            pygame.draw.line(sprite, pygame.color.Color(0, 0, 0), (x * posScale + lineStart.x, 0), (x * posScale + lineStart.x, self.sizePix.y))
+            pygame.draw.line(sprite, pygame.color.Color(128, 128, 128), (x * posScale + lineStart.x, 0), (x * posScale + lineStart.x, self.sizePix.y))
         for y in range(int(lineCount.y)):
-            pygame.draw.line(sprite, pygame.color.Color(0, 0, 0), (0, y * posScale + lineStart.y), (self.sizePix.x, y * posScale + lineStart.y))
+            pygame.draw.line(sprite, pygame.color.Color(128, 128, 128), (0, y * posScale + lineStart.y), (self.sizePix.x, y * posScale + lineStart.y))
 
     def addGridItem(self, item:LogicGridItem, pos:Vec):
         self.removeGridItem(pos=pos)
@@ -210,9 +235,7 @@ class LogicGrid(ScreenSpriteItem):
     def setVeiwCenter(self, veiwCenter:Vec):
         self.viewCenter = veiwCenter
     
-    def setZoom(self, zoom:float):
-        if zoom < 0.05:
-            zoom = 0.05
+    def setZoom(self, zoom:float,):
         if zoom > 1:
             zoom = 1
         self.viewCenter += (Helpers.getMousePos() - self.pos - self.sizePix/2)/self.zoom/self.itemSpacing
