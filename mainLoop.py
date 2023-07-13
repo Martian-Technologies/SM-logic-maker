@@ -7,6 +7,7 @@ from pygame import Vector2 as Vec
 from logicGrid import LogicGrid
 from logicGrid import LogicGridItem
 from blockMenu import BlockMenu
+from pluginManager import PluginManager
 
 class MainLoop:
     def __init__(self, app:App) -> None:
@@ -21,7 +22,10 @@ class MainLoop:
                 Vec(10, 10)
             )
         )
-        self.itemManager.addItem(BlockMenu(Vec(50, 100), Vec(150, -60), 'block menu'))
+        block_menu = BlockMenu(Vec(50, 100), Vec(150, -60), 'block menu')
+        pm = PluginManager(block_menu)
+        print(block_menu.items)
+        self.itemManager.addItem(block_menu)
         logicGrid:LogicGrid = self.itemManager.addItem(LogicGrid(Vec(200, 70), Vec(100, 70), 'logic grid'))
         logicGrid.addGridItem(LogicGridItem(), Vec(0, 0))
         logicGrid.addGridItem(LogicGridItem(), Vec(2, 0))
