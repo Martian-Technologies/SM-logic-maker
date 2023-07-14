@@ -53,78 +53,124 @@ class LogicGrid(ScreenSpriteItem):
         self.selectedPos = None
         self.selectIconEdgeThickness = 5
         self.drag_reference = None
+        self.eventFunctions:list = [
+            self.doPlacementEvents,
+            self.doSelectionEvents,
+            self.centerCameraEvent,
+        ]
 
     def initInWin(self):
         self.sizePix:Vec = Vec(self.app.screen.get_size()[0], self.app.screen.get_size()[1]) - self.pos - self.pos2
-        self.blockMenu = self.app.mainLoop.itemManager.getItemFromName('block menu')
+        self.blockMenu = self.app.mainLoop.block_menu
+        self.centerCameraOnArea()
+
+    
     
     def handleEvents(self, events:list[pygame.event.Event]):
-        for event in events:
-            if event.type == pygame.MOUSEWHEEL and self.isTouchingMouse():
-                self.setZoom(zoom = self.zoom * (2 ** (event.y/4)))
-            elif event.type == pygame.WINDOWRESIZED:
+        i = 0
+        while i < len(events):
+            delEvent = False
+            for eventFunction in self.eventFunctions:
+                if eventFunction(events[i]):
+                    delEvent = True
+                    break
+            if delEvent:
+                events.remove(events[i])
+                continue
+
+            event = events[i]
+            if event.type == pygame.WINDOWRESIZED:
                 self.sizePix:Vec = Vec(self.app.screen.get_size()[0], self.app.screen.get_size()[1]) - self.pos - self.pos2
+            elif event.type == pygame.MOUSEWHEEL and self.isTouchingMouse():
+                self.setZoom(self.zoom * (2 ** (event.y/4)), True)
             elif event.type == pygame.MOUSEBUTTONDOWN and self.isTouchingMouse():
-                if event.button == 1:
-                    clickedPos = Helpers.floorVec(self.screenPosToGridPos(Helpers.getMousePos()))
-                    if self.blockMenu.selectedItem != None:
-                        self.addGridItem(self.blockMenu.selectedItem(), clickedPos)
-                    else:
-                        if self.selectedPos == clickedPos:
-                            self.selectedPos = None
-                        else:
-                            if pygame.key.get_mods() & pygame.KMOD_SHIFT and self.selectedPos != None:
-                                if type(self.selectedPos) == tuple:
-                                    self.selectedPos = (self.selectedPos[0], clickedPos)
-                                else:
-                                    self.selectedPos = (self.selectedPos, clickedPos)
-                            else:
-                                self.selectedPos = clickedPos
-                elif event.button == 3:
-                    self.drag_reference = (Helpers.getMousePos() - self.pos - self.sizePix/2)/self.zoom/self.itemSpacing + self.viewCenter
+                if event.button == 3:
+                    self.drag_reference = self.screenPosToGridPos(Helpers.getMousePos())
             elif event.type == pygame.MOUSEBUTTONUP:
-                self.drag_reference = None
+                if event.button == 3:
+                    self.drag_reference = None
             elif event.type == pygame.MOUSEMOTION and self.drag_reference != None:
-                self.viewCenter = self.drag_reference - (Helpers.getMousePos() - self.pos - self.sizePix/2)/self.zoom/self.itemSpacing
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_BACKSPACE:
-                    if self.selectedPos != None:
-                        if type(self.selectedPos) == tuple:
-                            areaSize = self.selectedPos[1] - self.selectedPos[0]
-                            corner = self.selectedPos[0].copy()
-                            if areaSize.x < 0:
-                                areaSize.x = -areaSize.x
-                                corner.x -= areaSize.x
-                            if areaSize.y < 0:
-                                areaSize.y = -areaSize.y
-                                corner.y -= areaSize.y
-                            areaSize += Vec(1, 1)
-                            for x in range(int(areaSize.x)):
-                                for y in range(int(areaSize.y)):
-                                    self.removeGridItem(pos=Vec(x, y) + corner)
-                        else:
-                            self.removeGridItem(pos=self.selectedPos)
-                elif event.key == keybinds.get('centerCamera'):
-                    if self.selectedPos != None and type(self.selectedPos) == tuple:
+                self.viewCenter += self.drag_reference - self.screenPosToGridPos(Helpers.getMousePos())
+            
+            i+=1
+            
+    
+    def centerCameraEvent(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == keybinds.get('centerCamera'):
+                if self.selectedPos != None:
+                    if type(self.selectedPos) == tuple:
                         min_x = min(self.selectedPos[0].x, self.selectedPos[1].x)
                         max_x = max(self.selectedPos[0].x, self.selectedPos[1].x)
                         min_y = min(self.selectedPos[0].y, self.selectedPos[1].y)
                         max_y = max(self.selectedPos[0].y, self.selectedPos[1].y)
-                    elif len(self.items) == 0:
-                        min_x = -5
-                        max_x = 5
-                        min_y = -5
-                        max_y = 5
                     else:
-                        min_x = min([item.pos.x for item in self.items])
-                        max_x = max([item.pos.x for item in self.items])
-                        min_y = min([item.pos.y for item in self.items])
-                        max_y = max([item.pos.y for item in self.items])
-                    vzoom = self.sizePix.x / (max_x - min_x + 5) / self.itemSpacing
-                    hzoom = self.sizePix.y / (max_y - min_y + 5) / self.itemSpacing
-                    self.setZoom(min(vzoom, hzoom))
-                    self.setVeiwCenter(Vec((min_x + max_x)/2+0.5, (min_y + max_y)/2+0.5))
-                    
+                        min_x = self.selectedPos.x
+                        max_x = self.selectedPos.x
+                        min_y = self.selectedPos.y
+                        max_y = self.selectedPos.y
+                elif len(self.items) == 0:
+                    min_x = None
+                    max_x = None
+                    min_y = None
+                    max_y = None
+                else:
+                    min_x = min([item.pos.x for item in self.items])
+                    max_x = max([item.pos.x for item in self.items])
+                    min_y = min([item.pos.y for item in self.items])
+                    max_y = max([item.pos.y for item in self.items])
+                self.centerCameraOnArea(min_x, max_x, min_y, max_y)
+                return True
+        return False
+
+    def centerCameraOnArea(self, min_x=None, max_x=None, min_y=None, max_y=None):
+        if min_x == None:
+            min_x = -2
+        if max_x == None:
+            max_x = 2
+        if min_y == None:
+            min_y = -2
+        if max_y == None:
+            max_y = 2
+        vzoom = self.sizePix.x / (max_x - min_x + 5) / self.itemSpacing
+        hzoom = self.sizePix.y / (max_y - min_y + 5) / self.itemSpacing
+        self.setViewArea(Vec((min_x + max_x)/2+0.5, (min_y + max_y)/2+0.5), min(vzoom, hzoom) * 0.9)
+
+    def doPlacementEvents(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and self.isTouchingMouse():
+            if event.button == 1:
+                clickedPos = Helpers.floorVec(self.screenPosToGridPos(Helpers.getMousePos()))
+                if self.blockMenu.selectedItem != None:
+                    self.addGridItem(self.blockMenu.selectedItem(), clickedPos)
+                    return True
+        return False
+        
+
+    def doSelectionEvents(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and self.isTouchingMouse():
+            clickedPos = Helpers.floorVec(self.screenPosToGridPos(Helpers.getMousePos()))
+            if event.button == 1:
+                if self.selectedPos == clickedPos:
+                    self.selectedPos = None
+                else:
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT and self.selectedPos != None:
+                        if type(self.selectedPos) == tuple:
+                            self.selectedPos = (self.selectedPos[0], clickedPos)
+                        else:
+                            self.selectedPos = (self.selectedPos, clickedPos)
+                    else:
+                        self.selectedPos = clickedPos
+                return True
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_BACKSPACE:
+                if self.selectedPos != None:
+                    if type(self.selectedPos) == tuple:
+                        Helpers.removeItemsFromList(self.getItemsBetweenPos(self.selectedPos[0], self.selectedPos[1]), self.items)
+                    else:
+                        self.removeGridItem(pos=self.selectedPos) 
+                    return True
+        return False
+
     def update(self):
         movementVec = Vec()
         pressed = pygame.key.get_pressed()
@@ -236,18 +282,21 @@ class LogicGrid(ScreenSpriteItem):
     def setVeiwCenter(self, veiwCenter:Vec):
         self.viewCenter = veiwCenter
     
-    def setZoom(self, zoom:float,):
+    def setZoom(self, zoom:float, fromMousePos=False):
         if zoom > 1:
             zoom = 1
-        self.viewCenter += (Helpers.getMousePos() - self.pos - self.sizePix/2)/self.zoom/self.itemSpacing
-        self.zoom = zoom
-        self.viewCenter -= (Helpers.getMousePos() - self.pos - self.sizePix/2)/self.zoom/self.itemSpacing
+        if zoom < 0.001:
+            zoom = 0.001
+        if fromMousePos:
+            self.viewCenter += (Helpers.getMousePos() - self.pos - self.sizePix/2)/self.zoom/self.itemSpacing
+            self.zoom = zoom
+            self.viewCenter -= (Helpers.getMousePos() - self.pos - self.sizePix/2)/self.zoom/self.itemSpacing
+        else:
+            self.zoom = zoom
 
     def setViewArea(self, veiwCenter:Vec=None, zoom:float=None):
-        if veiwCenter != None:
-            self.viewCenter = veiwCenter
-        if zoom != None:
-            self.zoom = zoom
+        self.setVeiwCenter(veiwCenter)
+        self.setZoom(zoom)
             
     def screenPosToGridPos(self, pos:Vec):
         return self.surfPosToGridPos(self.screenPosToSurfPos(pos))
@@ -256,7 +305,7 @@ class LogicGrid(ScreenSpriteItem):
         return self.surfPosToScreenPos(self.gridPosToSurfPos(pos))
 
     def surfPosToGridPos(self, pos:Vec):
-        return (pos - (self.sizePix / 2)) / (self.zoom * self.itemSpacing) + self.viewCenter
+        return (pos - self.sizePix/2)/self.zoom/self.itemSpacing + self.viewCenter
 
     def gridPosToSurfPos(self, pos:Vec):
         return (pos - self.viewCenter) * (self.zoom * self.itemSpacing) + (self.sizePix / 2)
@@ -278,4 +327,11 @@ class LogicGrid(ScreenSpriteItem):
             if item.pos == pos:
                 return item
         return None
+    
+    def getItemsBetweenPos(self, corner1:Vec, corner2:Vec):
+        itemsInArea = []
+        for item in self.items:
+            if Helpers.isPosInArea(item.pos, corner1, corner2):
+                itemsInArea.append(item)
+        return itemsInArea
 

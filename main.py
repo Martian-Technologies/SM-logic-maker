@@ -12,7 +12,7 @@ class App:
             self.size, pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.RESIZABLE
         )
         self.clock = pygame.time.Clock()
-        self.mainLoop = None
+        self.mainLoop:MainLoop = None
         self.start()
 
     def on_cleanup(self):

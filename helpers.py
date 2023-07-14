@@ -48,3 +48,21 @@ class Helpers:
             return True
         except TypeError:
             return False
+        
+    def removeItemsFromList(items:list | tuple | object | None, l:list):
+        try:
+            if Helpers.isIterable(items):
+                for item in items:
+                    l.remove(item)
+            else:
+                l.remove(item)
+        except:
+            pass
+    
+    def isPosInArea(pos:Vec, corner1:Vec, corner2:Vec):
+        if pos.x > max(corner1.x, corner2.x) \
+            or pos.x < min(corner1.x, corner2.x) \
+            or pos.y > max(corner1.y, corner2.y) \
+            or pos.y < min(corner1.y, corner2.y):
+            return False
+        return True
