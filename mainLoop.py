@@ -28,10 +28,10 @@ class MainLoop:
         self.itemManager.addItem(self.block_menu)
 
         logicGrid:LogicGrid = self.itemManager.addItem(LogicGrid(Vec(200, 70), Vec(100, 70), 'logic grid'))
-        logicGrid.addGridItem(LogicGridItem(), Vec(0, 0))
-        logicGrid.addGridItem(LogicGridItem(), Vec(2, 0))
-        logicGrid.addGridItem(LogicGridItem(), Vec(0, 2))
-        logicGrid.addGridItem(LogicGridItem(), Vec(2, 2))
+        logicGrid.backend.addGridItem(LogicGridItem(), Vec(0, 0))
+        logicGrid.backend.addGridItem(LogicGridItem(), Vec(2, 0))
+        logicGrid.backend.addGridItem(LogicGridItem(), Vec(0, 2))
+        logicGrid.backend.addGridItem(LogicGridItem(), Vec(2, 2))
     
     def loop(self, events:pygame.event.Event):
         """The main loop for the app"""

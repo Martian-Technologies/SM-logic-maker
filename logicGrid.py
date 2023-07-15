@@ -39,15 +39,12 @@ class testItem(LogicGridItem):
          
 
 class LogicGrid(ScreenSpriteItem):
-    nextItemID = 0
-    
     def __init__(self, pos1FromTopLeft:Vec, pos2FromBottomRight:Vec, name:str=None) -> None:
         super().__init__(None, pos1FromTopLeft, name)
         self.pos2:Vec = pos2FromBottomRight
         self.sizePix:Vec = None
         self.viewCenter:Vec = Vec(-1, 1)
         self.zoom:float = 0.5
-        self.items:list[LogicGridItem] = []
         self.itemSpacing = 128
         self.iconSize = 100
         self.selectedPos = None
@@ -58,13 +55,13 @@ class LogicGrid(ScreenSpriteItem):
             self.doSelectionEvents,
             self.centerCameraEvent,
         ]
+        self.backend = LogicGridBackend()
 
     def initInWin(self):
         self.sizePix:Vec = Vec(self.app.screen.get_size()[0], self.app.screen.get_size()[1]) - self.pos - self.pos2
         self.blockMenu = self.app.mainLoop.block_menu
         self.centerCameraOnArea()
 
-    
     
     def handleEvents(self, events:list[pygame.event.Event]):
         i = 0
@@ -109,16 +106,16 @@ class LogicGrid(ScreenSpriteItem):
                         max_x = self.selectedPos.x
                         min_y = self.selectedPos.y
                         max_y = self.selectedPos.y
-                elif len(self.items) == 0:
+                elif len(self.backend.items) == 0:
                     min_x = None
                     max_x = None
                     min_y = None
                     max_y = None
                 else:
-                    min_x = min([item.pos.x for item in self.items])
-                    max_x = max([item.pos.x for item in self.items])
-                    min_y = min([item.pos.y for item in self.items])
-                    max_y = max([item.pos.y for item in self.items])
+                    min_x = min([item.pos.x for item in self.backend.items])
+                    max_x = max([item.pos.x for item in self.backend.items])
+                    min_y = min([item.pos.y for item in self.backend.items])
+                    max_y = max([item.pos.y for item in self.backend.items])
                 self.centerCameraOnArea(min_x, max_x, min_y, max_y)
                 return True
         return False
@@ -141,7 +138,7 @@ class LogicGrid(ScreenSpriteItem):
             if event.button == 1:
                 clickedPos = Helpers.floorVec(self.screenPosToGridPos(Helpers.getMousePos()))
                 if self.blockMenu.selectedItem != None:
-                    self.addGridItem(self.blockMenu.selectedItem(), clickedPos)
+                    self.backend.addGridItem(self.blockMenu.selectedItem(), clickedPos)
                     return True
         return False
         
@@ -165,9 +162,9 @@ class LogicGrid(ScreenSpriteItem):
             if event.key == pygame.K_BACKSPACE:
                 if self.selectedPos != None:
                     if type(self.selectedPos) == tuple:
-                        Helpers.removeItemsFromList(self.getItemsBetweenPos(self.selectedPos[0], self.selectedPos[1]), self.items)
+                        Helpers.removeItemsFromList(self.backend.getItemsBetweenPos(self.selectedPos[0], self.selectedPos[1]), self.backend.items)
                     else:
-                        self.removeGridItem(pos=self.selectedPos) 
+                        self.backend.removeGridItem(pos=self.selectedPos) 
                     return True
         return False
 
@@ -235,7 +232,7 @@ class LogicGrid(ScreenSpriteItem):
                                 (self.itemSpacing*size.x*self.zoom) - self.selectIconEdgeThickness*2,
                                 (self.itemSpacing*size.y*self.zoom) - self.selectIconEdgeThickness*2)
                                 )
-        for item in self.items:
+        for item in self.backend.items:
             icon:pygame.surface.Surface = item.getIcon()
             icon = pygame.transform.scale_by(icon, self.zoom * self.iconSize/max(icon.get_size()[0], icon.get_size()[1]))
             iconPos = self.gridPosToSurfPos(item.pos) + Vec(self.itemSpacing*self.zoom - icon.get_size()[0], self.itemSpacing*self.zoom - icon.get_size()[1])/2
@@ -259,25 +256,6 @@ class LogicGrid(ScreenSpriteItem):
             pygame.draw.line(sprite, pygame.color.Color(128, 128, 128), (x * posScale + lineStart.x, 0), (x * posScale + lineStart.x, self.sizePix.y))
         for y in range(int(lineCount.y)):
             pygame.draw.line(sprite, pygame.color.Color(128, 128, 128), (0, y * posScale + lineStart.y), (self.sizePix.x, y * posScale + lineStart.y))
-
-    def addGridItem(self, item:LogicGridItem, pos:Vec):
-        self.removeGridItem(pos=pos)
-        item.pos = pos
-        item.ID = self.nextItemID
-        self.nextItemID += 1
-        self.items.append(item)
-
-    def addGridItemFromData(self, itemData:dict, pos:Vec):
-        pass
-
-    def removeGridItem(self, ID:int=None, pos:Vec=None):
-        try:
-            if ID != None:
-                self.items.remove(self.getItemWithID(ID))
-            else:
-                self.items.remove(self.getItemAtPos(pos))
-        except:
-            pass
 
     def setVeiwCenter(self, veiwCenter:Vec):
         self.viewCenter = veiwCenter
@@ -310,6 +288,32 @@ class LogicGrid(ScreenSpriteItem):
     def gridPosToSurfPos(self, pos:Vec):
         return (pos - self.viewCenter) * (self.zoom * self.itemSpacing) + (self.sizePix / 2)
 
+
+class LogicGridBackend:
+    nextItemID = 0
+
+    def __init__(self) -> None:
+        self.items:list[LogicGridItem] = []
+
+    def addGridItem(self, item:LogicGridItem, pos:Vec):
+        self.removeGridItem(pos=pos)
+        item.pos = pos
+        item.ID = self.nextItemID
+        self.nextItemID += 1
+        self.items.append(item)
+
+    def addGridItemFromData(self, itemData:dict, pos:Vec):
+        pass
+
+    def removeGridItem(self, ID:int=None, pos:Vec=None):
+        try:
+            if ID != None:
+                self.items.remove(self.getItemWithID(ID))
+            else:
+                self.items.remove(self.getItemAtPos(pos))
+        except:
+            pass
+    
     def getAreaData(self, corner:Vec=None, size:Vec=None):
         pass
 
@@ -334,4 +338,3 @@ class LogicGrid(ScreenSpriteItem):
             if Helpers.isPosInArea(item.pos, corner1, corner2):
                 itemsInArea.append(item)
         return itemsInArea
-
