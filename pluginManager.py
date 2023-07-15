@@ -2,6 +2,7 @@ import os
 import importlib
 import pygame
 
+
 class PluginManager:
     def __init__(self, app):
         block_menu = app.mainLoop.block_menu
@@ -34,11 +35,11 @@ class PluginManager:
             # print addition types
             for additionType in pluginClass.additions:
                 print(additionType)
-                if additionType == 'logicGridItems':
+                if additionType == "logicGridItems":
                     for item in pluginClass.additions[additionType]:
                         print(item)
                         self.addLogicGridItem(item, LogicGridItem_base, block_menu)
-                elif additionType == 'startup':
+                elif additionType == "startup":
                     for func in pluginClass.additions[additionType]:
                         print(func)
                         func(self.app)
@@ -57,10 +58,11 @@ class PluginManager:
 
         # make a copy of item that would be virtually "inherited" from LogicGridItem_base
         class LogicGridItem(LogicGridItem_base):
-            name:str = item.name
-            icon_color:pygame.color.Color = item.icon_color
-            icon:pygame.surface.Surface = pygame.surface.Surface((100, 100))
+            name: str = item.name
+            icon_color: pygame.color.Color = item.icon_color
+            icon: pygame.surface.Surface = pygame.surface.Surface((100, 100))
             icon.fill(item.icon_color)
+
             def __init__(self, data=None) -> None:
                 super().__init__(data, self.name, None)
 
@@ -75,4 +77,3 @@ class PluginManager:
 
         # add item to block menu
         block_menu.addItem(LogicGridItem)
-
