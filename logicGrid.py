@@ -107,17 +107,11 @@ class LogicGrid(ScreenSpriteItem):
     def centerCameraEvent(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == keybinds.get("centerCamera"):
-                if self.selectedPos != None:
-                    if type(self.selectedPos) == tuple:
-                        min_x = min(self.selectedPos[0].x, self.selectedPos[1].x)
-                        max_x = max(self.selectedPos[0].x, self.selectedPos[1].x)
-                        min_y = min(self.selectedPos[0].y, self.selectedPos[1].y)
-                        max_y = max(self.selectedPos[0].y, self.selectedPos[1].y)
-                    else:
-                        min_x = self.selectedPos.x
-                        max_x = self.selectedPos.x
-                        min_y = self.selectedPos.y
-                        max_y = self.selectedPos.y
+                if self.selectedPos != None and type(self.selectedPos) == tuple:
+                    min_x = min(self.selectedPos[0].x, self.selectedPos[1].x)
+                    max_x = max(self.selectedPos[0].x, self.selectedPos[1].x)
+                    min_y = min(self.selectedPos[0].y, self.selectedPos[1].y)
+                    max_y = max(self.selectedPos[0].y, self.selectedPos[1].y)
                 elif len(self.backend.items) == 0:
                     min_x = None
                     max_x = None
