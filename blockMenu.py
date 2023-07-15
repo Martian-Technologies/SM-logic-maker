@@ -8,6 +8,14 @@ import pygame
 
 class BlockMenu(ScreenSpriteItem):
     def __init__(self, pos: Vec, pos2: Vec, name: str = None) -> None:
+        """
+        A class representing a block menu in the SM logic maker.
+
+        Args:
+        - pos (Vec): The position of the top-left corner of the block menu.
+        - pos2 (Vec): The position of the bottom-right corner of the block menu.
+        - name (str): The name of the block menu.
+        """
         self.name = name
         self.pos: Vec = pos
         self.pos2: Vec = pos2
@@ -79,6 +87,15 @@ class BlockMenu(ScreenSpriteItem):
         self.baseSprite.fill(pygame.color.Color(150, 150, 150))
 
     def getSurfPosOfItemAtIndex(self, index: int):
+        """
+        Returns the surface position of the item at the given index.
+
+        Args:
+        - index (int): The index of the item.
+
+        Returns:
+        - The surface position of the item at the given index.
+        """
         if len(self.items) <= index or len(self.items) < -index:
             return None
         iconSize = Helpers.tulpeToVec(self.items[index].getMenuIcon().get_size())
@@ -118,8 +135,20 @@ class BlockMenu(ScreenSpriteItem):
         super().draw()
 
     def addItem(self, item: LogicGridItem):
+        """
+        Adds an item to the block menu.
+
+        Args:
+        - item (LogicGridItem): The item to add.
+        """
         self.items.append(item)
 
     def addItems(self, items: list[LogicGridItem]):
+        """
+        Adds a list of items to the block menu.
+
+        Args:
+        - items (list[LogicGridItem]): The items to add.
+        """
         for item in items:
             self.addItem(item)

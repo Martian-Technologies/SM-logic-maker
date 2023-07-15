@@ -7,6 +7,9 @@ class App:
     clock = None
 
     def __init__(self):
+        """
+        Initializes the App class, which creates a Pygame window and starts the main loop.
+        """
         self.running = True
         self.size = self.weight, self.height = 640, 400
         pygame.init()
@@ -18,9 +21,15 @@ class App:
         self.start()
 
     def on_cleanup(self):
+        """
+        Cleans up the Pygame module when the application is closed.
+        """
         pygame.quit()
 
     def start(self):
+        """
+        Starts the main loop of the application.
+        """
         MainLoop(self)
 
         while self.running:

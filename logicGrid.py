@@ -1,3 +1,4 @@
+
 import pathlib
 from pygame import Vector2 as Vec
 import pygame
@@ -7,12 +8,24 @@ from keybindManager import keybinds
 
 
 class LogicGridItem:
+    """
+    Base class for items that can be placed on a LogicGrid.
+    """
+
     icon: pygame.surface.Surface = pygame.surface.Surface((100, 100))
     icon.fill(pygame.color.Color(100, 100, 100))
 
     def __init__(
         self, data=None, name: str = "base grid class", icon: pygame.surface.Surface = None
     ) -> None:
+        """
+        Initializes a new instance of the LogicGridItem class.
+
+        Args:
+        - data: The data to initialize the item with.
+        - name: The name of the item.
+        - icon: The icon to display for the item.
+        """
         self.name: str = name
         self.ID: int = None
         self.pos: Vec = None
@@ -20,28 +33,63 @@ class LogicGridItem:
             self.icon = icon
 
     def getIcon(self) -> pygame.Surface:
+        """
+        Gets the icon for the item.
+
+        Returns:
+        - The icon for the item.
+        """
         return self.icon
 
     def toData(self):
+        """
+        Converts the item to data.
+        """
         pass
 
     @classmethod
     def getMenuIcon(cls):
+        """
+        Gets the icon to display in the menu for the item.
+
+        Returns:
+        - The icon to display in the menu for the item.
+        """
         return cls.icon
 
     @staticmethod
     def dataIsType(data):
+        """
+        Determines if the data is of the correct type.
+
+        Args:
+        - data: The data to check.
+
+        Returns:
+        - True if the data is of the correct type, False otherwise.
+        """
         pass
 
 
 class testItem(LogicGridItem):
+    """
+    A test item that can be placed on a LogicGrid.
+    """
+
     icon: pygame.surface.Surface = pygame.image.load(
         pathlib.Path(__file__).parent.absolute() / "assets" / "mtechloadingscreen.png"
     )
     # icon.fill(pygame.color.Color(0, 100, 0))
 
     def __init__(self, data=None) -> None:
+        """
+        Initializes a new instance of the testItem class.
+
+        Args:
+        - data: The data to initialize the item with.
+        """
         super().__init__(data, "testItem", None)
+
 
 
 class LogicGrid(ScreenSpriteItem):

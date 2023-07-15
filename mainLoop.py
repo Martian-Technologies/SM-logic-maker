@@ -12,6 +12,12 @@ from pluginManager import PluginManager
 
 class MainLoop:
     def __init__(self, app: App) -> None:
+        """
+        Initializes the MainLoop class.
+
+        Args:
+        - app (App): The main App instance.
+        """
         self.app = app
         app.mainLoop = self
         self.itemManager = ScreenItemManager(app)
@@ -32,7 +38,12 @@ class MainLoop:
         logicGrid.backend.addGridItem(LogicGridItem(), Vec(2, 2))
 
     def loop(self, events: pygame.event.Event):
-        """The main loop for the app"""
+        """
+        The main loop for the app.
+
+        Args:
+        - events (pygame.event.Event): The events to handle.
+        """
         self.app.screen.fill(
             pygame.color.Color(
                 0,
