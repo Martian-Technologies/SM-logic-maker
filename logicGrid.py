@@ -10,9 +10,9 @@ class LogicGridItem:
     icon.fill(pygame.color.Color(100, 100, 100))
 
     def __init__(self, data=None, name:str="base grid class", icon:pygame.surface.Surface=None) -> None:
-        self.name = name
-        self.ID = None
-        self.pos = None
+        self.name:str = name
+        self.ID:int = None
+        self.pos:Vec = None
         if icon != None:
             self.icon = icon
 
@@ -55,7 +55,7 @@ class LogicGrid(ScreenSpriteItem):
             self.doSelectionEvents,
             self.centerCameraEvent,
         ]
-        self.backend = LogicGridBackend()
+        self.backend:LogicGridBackend = LogicGridBackend()
 
     def initInWin(self):
         self.sizePix:Vec = Vec(self.app.screen.get_size()[0], self.app.screen.get_size()[1]) - self.pos - self.pos2
@@ -317,8 +317,18 @@ class LogicGridBackend:
     def getAreaData(self, corner:Vec=None, size:Vec=None):
         pass
 
-    def setAreaData(self, items:list[dict], pos:Vec=Vec(), clearAreaBefore:bool=False):
-        pass
+    def setAreaData(self, items:list[dict], pos:Vec=Vec(), clearAreaBefore:bool=True):
+        """DOES NOT WORK BECAUSE LogicGridItem DOES NOT IMPEMENT ANY OF THE FUNCTIONS CALLED"""
+        allItemClasses:list[type[LogicGridItem]] = [LogicGridItem, testItem]
+        for itemData in items:
+            for itemClass in allItemClasses:
+                itemClass = itemClass
+                if itemClass.dataIsType(itemData):
+                    item:LogicGridItem = itemClass(itemData)
+                    self.addGridItem(item, item.pos + pos)
+                    break
+            
+
 
     def getItemWithID(self, ID:int):
         for item in self.items:
